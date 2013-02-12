@@ -42,7 +42,7 @@ describe('Given ui.bootstrap.dialog', function(){
 
 	var openDialog = function(templateUrl, controller){
 		dialog.open(templateUrl, controller);
-		$rootScope.$apply();
+		$scope.$apply();
 	};
 
 	var closeDialog = function(result){
