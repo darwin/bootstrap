@@ -9,17 +9,20 @@ angular.module('ui.bootstrap.tabs', [])
     pane.selected = true;
   };
 
-  this.addPane = function addPane(pane) {
+  this.addPane = function addPane(pane, index) {
     if (!panes.length) {
       $scope.select(pane);
     }
-    panes.push(pane);
+    if (index === undefined) {
+      index = panes.length;
+    }
+    panes.splice(index, 0, pane);
   };
 
-  this.removePane = function removePane(pane) { 
+  this.removePane = function removePane(pane) {
     var index = panes.indexOf(pane);
     panes.splice(index, 1);
-    //Select a new pane if removed pane was selected 
+    //Select a new pane if removed pane was selected
     if (pane.selected && panes.length > 0) {
       $scope.select(panes[index < panes.length ? index : index-1]);
     }
@@ -64,7 +67,18 @@ angular.module('ui.bootstrap.tabs', [])
         }
       });
 
-      tabsCtrl.addPane(scope);
+      // we cannot use jQuery's index() function, AFAIK it is not implemented under jqLite
+      var findIndexOf = function(el) {
+        var rawEl = el.get(0);
+        var siblings = el.parent().children();
+        for (var i=0; i<siblings.length; i++) {
+          if (siblings.get(i) === rawEl) {
+            return i;
+          }
+        }
+      };
+
+      tabsCtrl.addPane(scope, findIndexOf(element));
       scope.$on('$destroy', function() {
         tabsCtrl.removePane(scope);
       });

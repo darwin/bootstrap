@@ -124,7 +124,7 @@ describe('remote selection', function() {
     expect(titles.eq(1)).toHaveClass('active');
 
     titles.eq(0).find('a').click();
-    
+
     expect(scope.panes[1].active).toBe(false);
   });
 
@@ -255,3 +255,55 @@ describe('remove tabs', function() {
 
 });
 
+describe('keep stable tab order', function() {
+  var elm, scope, mode;
+
+  // load the tabs code
+  beforeEach(module('ui.bootstrap.tabs'));
+
+  // load the templates
+  beforeEach(module('template/tabs/tabs.html', 'template/tabs/pane.html'));
+
+  beforeEach(inject(function($rootScope, $compile) {
+    // we might move this tpl into an html file as well...
+    elm = angular.element(
+      '<div>' +
+        '<tabs>' +
+          '<pane ng-repeat="pane in panes | filter:paneIsAvailable" active="pane.active" heading="{{pane.title}}">' +
+            'some content' +
+          '</pane>' +
+        '</tabs>' +
+      '</div>'
+    );
+    scope = $rootScope;
+    scope.panes = [
+      { title:"Title 1", available:true },
+      { title:"Title 2", available:true },
+      { title:"Title 3", available:true }
+    ];
+
+    scope.paneIsAvailable = function(pane) {
+      return pane.available;
+    };
+
+    $compile(elm)(scope);
+    scope.$digest();
+  }));
+
+  it('should reintroduce pane to proper position', function() {
+    function titles() {
+      return elm.find('ul.nav-tabs li');
+    }
+
+    expect(titles().length).toBe(3);
+    scope.$apply('panes[1].available=false');
+    scope.$digest();
+    expect(titles().length).toBe(2);
+    scope.$apply('panes[1].available=true');
+    scope.$digest();
+    expect(titles().length).toBe(3);
+    expect(titles().eq(0).text().trim()).toBe("Title 1");
+    expect(titles().eq(1).text().trim()).toBe("Title 2");
+    expect(titles().eq(2).text().trim()).toBe("Title 3");
+  });
+});
