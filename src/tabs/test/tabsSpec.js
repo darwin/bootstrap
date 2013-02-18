@@ -256,7 +256,6 @@ describe('remove tabs', function() {
 });
 
 describe('keep stable tab order', function() {
-  var elm, scope, mode;
 
   // load the tabs code
   beforeEach(module('ui.bootstrap.tabs'));
@@ -264,9 +263,9 @@ describe('keep stable tab order', function() {
   // load the templates
   beforeEach(module('template/tabs/tabs.html', 'template/tabs/pane.html'));
 
-  beforeEach(inject(function($rootScope, $compile) {
+  it('should reintroduce pane to proper position', inject(function($compile, $rootScope) {
     // we might move this tpl into an html file as well...
-    elm = angular.element(
+    var elm = angular.element(
       '<div>' +
         '<tabs>' +
           '<pane ng-repeat="pane in panes | filter:paneIsAvailable" active="pane.active" heading="{{pane.title}}">' +
@@ -275,7 +274,7 @@ describe('keep stable tab order', function() {
         '</tabs>' +
       '</div>'
     );
-    scope = $rootScope;
+    var scope = $rootScope;
     scope.panes = [
       { title:"Title 1", available:true },
       { title:"Title 2", available:true },
@@ -288,9 +287,7 @@ describe('keep stable tab order', function() {
 
     $compile(elm)(scope);
     scope.$digest();
-  }));
 
-  it('should reintroduce pane to proper position', function() {
     function titles() {
       return elm.find('ul.nav-tabs li');
     }
@@ -305,5 +302,78 @@ describe('keep stable tab order', function() {
     expect(titles().eq(0).text().trim()).toBe("Title 1");
     expect(titles().eq(1).text().trim()).toBe("Title 2");
     expect(titles().eq(2).text().trim()).toBe("Title 3");
-  });
+  }));
+
+  it('should reintroduce pane to proper position even with garbage', inject(function($compile, $rootScope) {
+    // we might move this tpl into an html file as well...
+    var elm = angular.element(
+      '<div>' +
+        '<tabs>' +
+          '  <!-- a comment -->' +
+          '  <div>div that makes troubles</div>' +
+          '<pane heading="first">First Static</pane>' +
+          '  <div>another div that may do evil</div>' +
+          '<pane ng-repeat="pane in panes | filter:paneIsAvailable" active="pane.active" heading="{{pane.title}}">some content</pane>' +
+          '  <!-- another comment -->' +
+          '<pane heading="mid">Mid Static</pane>' +
+          '  a text node' +
+          '  <!-- another comment -->' +
+          '  <span>yet another span that may do evil</span>' +
+          '<pane ng-repeat="pane in panes | filter:paneIsAvailable" active="pane.active" heading="Second {{pane.title}}">some content</pane>' +
+          '  a text node' +
+          '  <span>yet another span that may do evil</span>' +
+          '  <!-- another comment -->' +
+          '<pane heading="last">Last Static</pane>' +
+          '  a text node' +
+          '  <span>yet another span that may do evil</span>' +
+          '  <!-- another comment -->' +
+        '</tabs>' +
+      '</div>'
+    );
+    var scope = $rootScope;
+    scope.panes = [
+      { title:"Title 1", available:true },
+      { title:"Title 2", available:true },
+      { title:"Title 3", available:true }
+    ];
+
+    scope.paneIsAvailable = function(pane) {
+      return pane.available;
+    };
+
+    function titles() {
+      return elm.find('ul.nav-tabs li');
+    }
+
+    $compile(elm)(scope);
+    scope.$digest();
+
+    expect(titles().length).toBe(9);
+    scope.$apply('panes[1].available=false');
+    scope.$digest();
+    expect(titles().length).toBe(7);
+    scope.$apply('panes[0].available=false');
+    scope.$digest();
+    expect(titles().length).toBe(5);
+    scope.$apply('panes[2].available=false');
+    scope.$digest();
+    expect(titles().length).toBe(3);
+    scope.$apply('panes[0].available=true');
+    scope.$digest();
+    expect(titles().length).toBe(5);
+    scope.$apply('panes[1].available=true');
+    scope.$apply('panes[2].available=true');
+    scope.$digest();
+    expect(titles().length).toBe(9);
+    expect(titles().eq(0).text().trim()).toBe("first");
+    expect(titles().eq(1).text().trim()).toBe("Title 1");
+    expect(titles().eq(2).text().trim()).toBe("Title 2");
+    expect(titles().eq(3).text().trim()).toBe("Title 3");
+    expect(titles().eq(4).text().trim()).toBe("mid");
+    expect(titles().eq(5).text().trim()).toBe("Second Title 1");
+    expect(titles().eq(6).text().trim()).toBe("Second Title 2");
+    expect(titles().eq(7).text().trim()).toBe("Second Title 3");
+    expect(titles().eq(8).text().trim()).toBe("last");
+  }));
+
 });

@@ -68,9 +68,9 @@ angular.module('ui.bootstrap.tabs', [])
       });
 
       // we cannot use jQuery's index() function, AFAIK it is not implemented under jqLite
-      var findIndexOf = function(el) {
+      var findIndexOfPane = function(el) {
         var rawEl = el.get(0);
-        var siblings = el.parent().children();
+        var siblings = el.parent().children(".tab-pane"); // this depends on template, have a better idea?
         for (var i=0; i<siblings.length; i++) {
           if (siblings.get(i) === rawEl) {
             return i;
@@ -78,7 +78,7 @@ angular.module('ui.bootstrap.tabs', [])
         }
       };
 
-      tabsCtrl.addPane(scope, findIndexOf(element));
+      tabsCtrl.addPane(scope, findIndexOfPane(element));
       scope.$on('$destroy', function() {
         tabsCtrl.removePane(scope);
       });
