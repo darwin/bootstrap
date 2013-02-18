@@ -48,6 +48,7 @@ angular.module('ui.bootstrap.tabs', [])
     },
     link: function(scope, element, attrs, tabsCtrl) {
       var getSelected, setSelected;
+      scope.__pane = true;
       scope.selected = false;
       if (attrs.active) {
         getSelected = $parse(attrs.active);
@@ -67,13 +68,17 @@ angular.module('ui.bootstrap.tabs', [])
         }
       });
 
-      // we cannot use jQuery's index() function, AFAIK it is not implemented under jqLite
       var findIndexOfPane = function(el) {
         var rawEl = el.get(0);
-        var siblings = el.parent().children(".tab-pane"); // this depends on template, have a better idea?
+        var siblings = el.parent().children();
+        var index = 0; // index only children which are our panes
         for (var i=0; i<siblings.length; i++) {
           if (siblings.get(i) === rawEl) {
-            return i;
+            return index;
+          }
+          var siblingScope = siblings.eq(i).scope();
+          if (siblingScope && siblingScope.__pane) {
+            index++;
           }
         }
       };
