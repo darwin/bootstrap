@@ -48,7 +48,7 @@ angular.module('ui.bootstrap.tabs', [])
     },
     link: function(scope, element, attrs, tabsCtrl) {
       var getSelected, setSelected;
-      scope.__pane = true;
+      element.get(0).__$isPane = true;
       scope.selected = false;
       if (attrs.active) {
         getSelected = $parse(attrs.active);
@@ -71,13 +71,14 @@ angular.module('ui.bootstrap.tabs', [])
       var findIndexOfPane = function(el) {
         var rawEl = el.get(0);
         var siblings = el.parent().children();
-        var index = 0; // index only children which are our panes
+        var index = 0;
         for (var i=0; i<siblings.length; i++) {
-          if (siblings.get(i) === rawEl) {
+          var rawSibling = siblings.get(i);
+          if (rawSibling === rawEl) {
             return index;
           }
-          var siblingScope = siblings.eq(i).scope();
-          if (siblingScope && siblingScope.__pane) {
+          // index only children which are our panes
+          if (rawSibling.__$isPane) {
             index++;
           }
         }
