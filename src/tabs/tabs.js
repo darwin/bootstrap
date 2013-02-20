@@ -46,11 +46,17 @@ angular.module('ui.bootstrap.tabs', [])
       a = a.indexing;
       b = b.indexing;
       while (true) {
+        // "b goes first" or "b is parent of a"
         if (b[i]<a[i] || (b[i]===undefined && a[i]!==undefined)) {
           return true;
         }
-        if (b[i]>a[i] || a[i]===undefined) {
+        // "a goes first" or "a is parent of b"
+        if (a[i]<b[i] || (a[i]===undefined && b[i]!==undefined)) {
           return false;
+        }
+        // this should never happen unless we have inconsistent data
+        if (a[i]===undefined && b[i]===undefined) {
+          break; // prevent infinite loop
         }
         i++;
       }
